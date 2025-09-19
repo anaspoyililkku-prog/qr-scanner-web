@@ -4,18 +4,25 @@
   <meta charset="utf-8">
   <title>Live QR Scanner</title>
   <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
+  <style>
+    body { font-family: sans-serif; text-align: center; }
+    #reader { width: 300px; margin: auto; }
+    #status { margin-top: 10px; font-weight: bold; }
+  </style>
 </head>
-<body style="text-align:center; font-family:sans-serif;">
+<body>
   <h2>📷 QR Scanner</h2>
-  <div id="reader" style="width:300px; margin:auto;"></div>
+  <div id="reader"></div>
   <p id="status">Ready to scan...</p>
 
   <script>
-    const SHEET_URL = "https://script.google.com/macros/s/AKfycbxZGOi_GXRomwut3TepS0YLgd3CjCSezwr2Zhu0_ul6e7Pid4niZu4c0F7EE8_P_F8m/exec"; // Step 1 Web App URL
+    // <-- Paste your Apps Script Web App URL here -->
+    const SHEET_URL = "YOUR_APPS_SCRIPT_WEB_APP_URL";
 
-    function onScanSuccess(decodedText) {
+    function onScanSuccess(decodedText, decodedResult) {
       document.getElementById("status").innerText = "Scanned: " + decodedText;
 
+      // Send scanned QR to Google Sheet
       fetch(SHEET_URL, {
         method: "POST",
         body: JSON.stringify({ qr: decodedText }),
@@ -23,7 +30,7 @@
       })
       .then(res => res.json())
       .then(data => {
-        if (data.status === "found") {
+        if(data.status === "found") {
           document.getElementById("status").innerText = "✅ Found in row " + data.row;
         } else {
           document.getElementById("status").innerText = "❌ Not found";
@@ -34,9 +41,17 @@
       });
     }
 
-    window.onload = () => {
-      const scanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
-      scanner.render(onScanSuccess);
+    function onScanFailure(error) {
+      // handle scan failure (optional)
+    }
+
+    window.onload = function() {
+      const html5QrcodeScanner = new Html5QrcodeScanner(
+        "reader",
+        { fps: 10, qrbox: 250 },
+        false
+      );
+      html5QrcodeScanner.render(onScanSuccess, onScanFailure);
     };
   </script>
 </body>
