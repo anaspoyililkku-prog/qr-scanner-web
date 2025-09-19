@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Live QR Scanner</title>
+  <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
+</head>
+<body style="text-align:center; font-family:sans-serif;">
+  <h2>📷 QR Scanner</h2>
+  <div id="reader" style="width:300px; margin:auto;"></div>
+  <p id="status">Ready to scan...</p>
+
+  <script>
+    const SHEET_URL = "PASTE_YOUR_WEB_APP_EXEC_URL_HERE"; // Step 1 Web App URL
+
+    function onScanSuccess(decodedText) {
+      document.getElementById("status").innerText = "Scanned: " + decodedText;
+
+      fetch(SHEET_URL, {
+        method: "POST",
+        body: JSON.stringify({ qr: decodedText }),
+        headers: { "Content-Type": "application/json" }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === "found") {
+          document.getElementById("status").innerText = "✅ Found in row " + data.row;
+        } else {
+          document.getElementById("status").innerText = "❌ Not found";
+        }
+      })
+      .catch(err => {
+        document.getElementById("status").innerText = "⚠️ Error: " + err;
+      });
+    }
+
+    window.onload = () => {
+      const scanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
+      scanner.render(onScanSuccess);
+    };
+  </script>
+</body>
+</html>
